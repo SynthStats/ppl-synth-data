@@ -1,0 +1,6 @@
+{{ base_dockerfile }}
+
+COPY test.sh TaskData.hs HiddenTaskData.hs /tests/
+RUN chmod +x /tests/test.sh
+
+WORKDIR /app

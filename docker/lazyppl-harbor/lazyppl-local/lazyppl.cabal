@@ -1,0 +1,27 @@
+cabal-version: 2.4
+name:           lazyppl
+version:        1.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      LazyPPL
+      LazyPPL.Distributions
+      LazyPPL.Distributions.Counter
+      LazyPPL.Distributions.DirichletP
+      LazyPPL.Distributions.GP
+      LazyPPL.Distributions.IBP
+      LazyPPL.Distributions.Memoization
+  hs-source-dirs: src
+  build-depends:
+      base >=4.7 && <5
+    , random >=1.2.0 && <1.4
+    , log-domain >=0.13.2 && <0.14
+    , mtl >=2.2.2 && <2.4
+    , transformers >=0.5.6.2 && <0.7
+    , containers >=0.6.5.1 && <0.8
+    , math-functions >=0.3.4.2
+    , hmatrix >=0.20.2 && <0.22
+    , deepseq >=1.4.4.0 && <1.6
+    , vector
+  default-language: Haskell2010

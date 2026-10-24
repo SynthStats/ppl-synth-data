@@ -1,0 +1,19 @@
+        self.response_law = {
+            "family": {{ spec["generative_family"] | tojson }},
+            "distribution": {{ distribution | tojson }},
+            "link": {{ link | tojson }},
+            "parameters": {
+                {% for name, units in parameter_units.items() %}
+                {{ name | tojson }}: {
+                    "value": {{ gp[name] | tojson }},
+                    "units": {{ units | tojson }},
+                },
+                {% endfor %}
+            },
+            "standardization": {
+                "method": {{ standardization | tojson }},
+                "domains": {{ spec["io_schema"]["feature_domains"] | tojson }},
+                "application": {{ standardization_application | tojson }},
+            },
+            "latent_parameters": {},
+        }

@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: z=(t-lo)/(hi-lo), using the declared time domain.
+
+    At construction theta=max(1e-8, Normal(rate_mean, rate_sigma**2)).
+    Conditional on theta, each query draws Y | t ~ Binomial(population_n, p(t)),
+    p(t)=1-exp(-theta*z), E[Y | t,theta]=population_n*p(t).
+    The link is -log(1-p(t))=theta*z; theta is the full-domain cumulative hazard,
+    and the response unit is people.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"population_n":"people","rate_mean":"full-domain cumulative hazard (Gaussian mean before positive floor)","rate_sigma":"full-domain cumulative hazard (Gaussian standard deviation)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "Binomial" %}
+        {% set link = "negative log survival" %}
+        {% set standardization = "minmax" %}
+        {% set standardization_application = "time before cumulative hazard theta*z" %}
+        {% include "_response_law.j2" +%}
+        self._population_n = int(self.response_law["parameters"]["population_n"]["value"])
+        rate_mean = float(self.response_law["parameters"]["rate_mean"]["value"])
+        rate_sigma = float(self.response_law["parameters"]["rate_sigma"]["value"])
+        self._theta = max(1e-8, self._rng.normal(rate_mean, rate_sigma))
+        self.response_law["latent_parameters"]["theta"] = float(self._theta)
+        {% set features = ["t"] %}
+        {% include "_feature_domains.j2" +%}
+        self._feature_names = ["t"]
+        self._multi_feature_input = False
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+
+    def step(self, x_values: tuple[float, ...]) -> int:
+        z = self._standardize_features(x_values)[0]
+        p = -np.expm1(-self._theta * z)
+        return int(self._rng.binomial(self._population_n, p))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["t", "{{ target_name }}"]
+
+    def get_ordered_features(self) -> list[str]:
+        return ["t"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with an infection-process environment. "
+            f"Provide a time value (float > 0) and receive the count of infected "
+            f"individuals out of {self._population_n} total."
+        )
+        if include_prior:
+            base += (
+                " Prior context: the infection probability increases over time "
+                "and individual outcomes are independent given the rate."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

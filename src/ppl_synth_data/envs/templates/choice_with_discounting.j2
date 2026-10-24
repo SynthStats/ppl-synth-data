@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+from scipy.special import expit
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: at construction k=max(1e-8, Normal(k_mean,k_sigma**2)).
+
+    Utilities are delayed_reward/(1+k*delay_days) and immediate_reward, in
+    commensurate reward units. k uses 1/day and choice_scale uses reward units.
+    Each query draws Y~Bernoulli(p), with p=epsilon/2 + (1-epsilon)*expit(
+    (delayed_utility-immediate_utility)/choice_scale); E[Y]=p. This is a logistic
+    utility-difference choice mixed with random lapses. Declared domains validate
+    queries without rescaling the structural response law.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"epsilon":"lapse probability","k_mean":"1/day (Gaussian mean before positive floor)","k_sigma":"1/day (Gaussian standard deviation)","choice_scale":"reward units (positive choice temperature)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "Bernoulli" %}
+        {% set link = "logit with lapse mixture" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "natural reward units and days in the utility law; declared domains validate queries only" %}
+        {% include "_response_law.j2" +%}
+        self._epsilon = float(self.response_law["parameters"]["epsilon"]["value"])
+        k_mean = float(self.response_law["parameters"]["k_mean"]["value"])
+        k_sigma = float(self.response_law["parameters"]["k_sigma"]["value"])
+        self._k = max(1e-8, self._rng.normal(k_mean, k_sigma))
+        self.response_law["latent_parameters"]["k"] = float(self._k)
+        self._choice_scale = float(self.response_law["parameters"]["choice_scale"]["value"])
+        {% set features = ["immediate_reward", "delayed_reward", "delay_days"] %}
+        self._feature_names = ["immediate_reward", "delayed_reward", "delay_days"]
+        {% include "_feature_domains.j2" +%}
+        self._multi_feature_input = True
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+
+    def step(self, x_values: tuple[float, ...]) -> int:
+        immediate_reward, delayed_reward, delay_days = x_values
+        v_delayed = delayed_reward / (1.0 + self._k * delay_days)
+        v_immediate = immediate_reward
+
+        diff = (v_delayed - v_immediate) / self._choice_scale
+        p_delayed = float(expit(diff))
+
+        if self._rng.uniform() < self._epsilon:
+            return int(self._rng.binomial(1, 0.5))
+        return int(self._rng.binomial(1, p_delayed))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["immediate_reward", "delayed_reward", "delay_days", "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a temporal choice environment. "
+            "Provide a JSON object with 'immediate_reward', 'delayed_reward', "
+            "and 'delay_days' to observe a binary choice (0=immediate, 1=delayed)."
+        )
+        if include_prior:
+            base += (
+                " Prior context: the decision-maker discounts future rewards "
+                "and occasionally makes random choices."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

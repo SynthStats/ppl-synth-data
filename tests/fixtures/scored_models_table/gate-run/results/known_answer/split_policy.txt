@@ -1,0 +1,1 @@
+known-answer; no split; holdout is the single point y*=1

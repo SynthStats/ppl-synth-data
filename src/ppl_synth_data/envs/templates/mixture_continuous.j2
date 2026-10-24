@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: z_j = (x_j - lo_j) / (hi_j - lo_j).
+
+    Component centers m_k partition the component-mean interval at bin midpoints;
+    on reset, mixture weights w ~ Dirichlet(1,...,1). Each query draws K~Categorical(w)
+    and Y | x,K ~ Normal(m_K + sum(coefficients[j]*z_j), noise_sigma**2).
+    Mean E[Y | x,w] = sum(w_k*m_k) + sum(coefficients[j]*z_j); identity link.
+    Centers, full-domain coefficient effects and noise_sigma use response units.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"n_components":"number of components","noise_sigma":"response units (standard deviation)","component_mean_lower":"response units (lower edge of center interval)","component_mean_upper":"response units (upper edge of center interval)","coefficients":"response change per full domain span"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "NormalMixture" %}
+        {% set link = "identity" %}
+        {% set standardization = "minmax" %}
+        {% set standardization_application = "all predictors before the shared component-mean shift" %}
+        {% include "_response_law.j2" +%}
+        self._n_components = int(self.response_law["parameters"]["n_components"]["value"])
+        self._noise_sigma = float(self.response_law["parameters"]["noise_sigma"]["value"])
+
+        {% set features = spec["io_schema"]["feature_names"] %}
+        self._feature_names = [{{ features | map("tojson") | join(", ") }}]
+        {% include "_feature_domains.j2" +%}
+        self._multi_feature_input = (
+            {{ "True" if spec["io_schema"]["input_type"] == "json" else "False" }}
+            or len(self._feature_names) > 1
+        )
+
+        {% include "_coefficients.j2" +%}
+        self._means: np.ndarray | None = None
+        self._component_mean_bounds = (
+            float(self.response_law["parameters"]["component_mean_lower"]["value"]),
+            float(self.response_law["parameters"]["component_mean_upper"]["value"]),
+        )
+        self._mix_weights: np.ndarray | None = None
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+        lower, upper = self._component_mean_bounds
+        spread = (upper - lower) / self._n_components
+        self._means = np.array([
+            lower + spread * (i + 0.5)
+            for i in range(self._n_components)
+        ])
+        raw = self._rng.dirichlet(np.ones(self._n_components))
+        self._mix_weights = raw
+        self.response_law["latent_parameters"].update({
+            "component_centers": self._means.tolist(),
+            "mixture_weights": self._mix_weights.tolist(),
+        })
+
+    def step(self, x_values: tuple[float, ...]) -> float:
+        component = int(self._rng.choice(self._n_components, p=self._mix_weights))
+        z = self._standardize_features(x_values)
+        feature_effect = float(np.dot(self._slopes, z))
+        mean = self._means[component] + feature_effect
+        return float(self._rng.normal(mean, self._noise_sigma))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return [*self._feature_names, "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = "This environment returns a continuous numeric response."
+        if self._multi_feature_input:
+            features = ", ".join(self._feature_names)
+            base += f" Input: JSON object with numeric values for {features}."
+        else:
+            base += " Input: a single float."
+        if include_prior:
+            base += f" The response is drawn from {self._n_components} distinct modes."
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

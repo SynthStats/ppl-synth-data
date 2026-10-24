@@ -1,0 +1,468 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "envspec-4f-v0.2",
+  "title": "EnvSpec-4F v0.2: v0.1 plus truncated Normal inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "env_id",
+    "env_name",
+    "domain",
+    "scenario",
+    "generative_family",
+    "features",
+    "response",
+    "data_plan"
+  ],
+  "properties": {
+    "env_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,80}$"
+    },
+    "env_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "source_row_sha256"
+      ],
+      "properties": {
+        "intent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_row_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "generative_family": {
+      "enum": [
+        "regression_continuous",
+        "regression_count",
+        "zero_inflated_count",
+        "binary_choice"
+      ]
+    },
+    "features": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    },
+    "response": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/regression_continuous"
+        },
+        {
+          "$ref": "#/$defs/regression_count"
+        },
+        {
+          "$ref": "#/$defs/zero_inflated_count"
+        },
+        {
+          "$ref": "#/$defs/binary_choice"
+        }
+      ]
+    },
+    "data_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_observations"
+      ],
+      "properties": {
+        "n_observations": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 5000
+        }
+      }
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "allowed_hints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_hints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "law"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,40}$"
+        },
+        "units": {
+          "type": "string"
+        },
+        "law": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/normal"
+            },
+            {
+              "$ref": "#/$defs/discrete_uniform"
+            },
+            {
+              "$ref": "#/$defs/bernoulli"
+            },
+            {
+              "$ref": "#/$defs/categorical"
+            },
+            {
+              "$ref": "#/$defs/fixed_counts"
+            },
+            {
+              "$ref": "#/$defs/truncated_normal"
+            }
+          ]
+        }
+      }
+    },
+    "normal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "mean",
+        "sd"
+      ],
+      "properties": {
+        "dist": {
+          "const": "normal"
+        },
+        "mean": {
+          "type": "number"
+        },
+        "sd": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "discrete_uniform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "low",
+        "high"
+      ],
+      "properties": {
+        "dist": {
+          "const": "discrete_uniform"
+        },
+        "low": {
+          "type": "integer"
+        },
+        "high": {
+          "type": "integer"
+        }
+      }
+    },
+    "coefficients": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "regression_continuous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "intercept",
+        "coefficients",
+        "noise_sigma"
+      ],
+      "properties": {
+        "family": {
+          "const": "regression_continuous"
+        },
+        "intercept": {
+          "type": "number"
+        },
+        "coefficients": {
+          "$ref": "#/$defs/coefficients"
+        },
+        "noise_sigma": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "regression_count": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "intercept_log_rate",
+        "coefficients",
+        "count_distribution"
+      ],
+      "properties": {
+        "family": {
+          "const": "regression_count"
+        },
+        "intercept_log_rate": {
+          "type": "number"
+        },
+        "coefficients": {
+          "$ref": "#/$defs/coefficients"
+        },
+        "count_distribution": {
+          "enum": [
+            "poisson",
+            "nb2"
+          ]
+        },
+        "nb2_alpha": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "zero_inflated_count": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "intercept_log_rate",
+        "coefficients",
+        "count_distribution",
+        "zero_inflation"
+      ],
+      "properties": {
+        "family": {
+          "const": "zero_inflated_count"
+        },
+        "intercept_log_rate": {
+          "type": "number"
+        },
+        "coefficients": {
+          "$ref": "#/$defs/coefficients"
+        },
+        "count_distribution": {
+          "enum": [
+            "poisson",
+            "nb2"
+          ]
+        },
+        "nb2_alpha": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "zero_inflation": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        }
+      }
+    },
+    "binary_choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "intercept",
+        "coefficients",
+        "link"
+      ],
+      "properties": {
+        "family": {
+          "const": "binary_choice"
+        },
+        "intercept": {
+          "type": "number"
+        },
+        "coefficients": {
+          "$ref": "#/$defs/coefficients"
+        },
+        "link": {
+          "const": "logit"
+        }
+      }
+    },
+    "bernoulli": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "p"
+      ],
+      "properties": {
+        "dist": {
+          "const": "bernoulli"
+        },
+        "p": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        }
+      }
+    },
+    "categorical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "levels",
+        "probs"
+      ],
+      "properties": {
+        "dist": {
+          "const": "categorical"
+        },
+        "levels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_]{0,30}$"
+          }
+        },
+        "probs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 1
+          }
+        }
+      }
+    },
+    "fixed_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "levels",
+        "counts"
+      ],
+      "properties": {
+        "dist": {
+          "const": "fixed_counts"
+        },
+        "levels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "oneOf": [
+            {
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "counts": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 24,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "truncated_normal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dist",
+        "mean",
+        "sd"
+      ],
+      "description": "Parent Normal parameters. At least one numeric bound; low < high and mean inside bounds are checked by typed validation.",
+      "properties": {
+        "dist": {
+          "const": "truncated_normal"
+        },
+        "mean": {
+          "type": "number"
+        },
+        "sd": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "low": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "high": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "low"
+          ],
+          "properties": {
+            "low": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "required": [
+            "high"
+          ],
+          "properties": {
+            "high": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

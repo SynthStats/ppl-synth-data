@@ -1,0 +1,13 @@
+/usr/local/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+Sampling: [warmup]
+Sampling: [warmup]
+Sampling: [intercept, log_reaction_time, sigma]
+Initializing NUTS using adapt_diag...
+Sequential sampling (1 chains in 1 job)
+NUTS: [intercept, sigma]
+Sampling 1 chain for 200 tune and 200 draw iterations (200 + 200 draws total) took 1 seconds.
+Sampling: [log_reaction_time]

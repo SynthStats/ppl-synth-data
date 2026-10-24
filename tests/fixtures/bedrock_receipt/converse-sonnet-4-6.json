@@ -1,0 +1,27 @@
+{
+ "output": {
+  "message": {
+   "role": "assistant",
+   "content": [
+    {
+     "text": "11"
+    }
+   ]
+  }
+ },
+ "stopReason": "end_turn",
+ "usage": {
+  "inputTokens": 31,
+  "outputTokens": 5,
+  "totalTokens": 36,
+  "cacheReadInputTokens": 0,
+  "cacheWriteInputTokens": 0
+ },
+ "metrics": {
+  "latencyMs": 979
+ },
+ "ResponseMetadata": {
+  "RequestId": "5a3cadcf-e9fe-44f6-b7d2-1ed094c0414f",
+  "HTTPStatusCode": 200
+ }
+}

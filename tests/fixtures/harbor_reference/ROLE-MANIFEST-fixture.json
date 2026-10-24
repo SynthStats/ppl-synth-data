@@ -1,0 +1,41 @@
+{
+  "description": "Role manifest for the Harbor reference fixture. Quantitative reducers apply when the program uses numeric values in arithmetic, including 0/1 indicators; categorical reducers apply to comparisons with level labels. All three predictors in solution/model.py enter arithmetic and are quantitative. The scalar row count n is preserved through the exact treatment mapping.",
+  "packages": [
+    {
+      "package_id": "pymc-bernoulli-regression",
+      "target": "y",
+      "columns": [
+        {
+          "column": "y",
+          "role": "TARGET",
+          "treatment": "preserve",
+          "reducer_type": null
+        },
+        {
+          "column": "dot_coherence",
+          "role": "PREDICTOR",
+          "treatment": "replace",
+          "reducer_type": "quantitative"
+        },
+        {
+          "column": "trial_number",
+          "role": "PREDICTOR",
+          "treatment": "replace",
+          "reducer_type": "quantitative"
+        },
+        {
+          "column": "mask_applied",
+          "role": "PREDICTOR",
+          "treatment": "replace",
+          "reducer_type": "quantitative"
+        },
+        {
+          "column": "n",
+          "role": "UNUSED",
+          "treatment": "preserve (scalar row count, never replaced)",
+          "reducer_type": null
+        }
+      ]
+    }
+  ]
+}

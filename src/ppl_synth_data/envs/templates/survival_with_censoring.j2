@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: on reset, each subject draws c~Normal(0, 1).
+
+    Hazard r(c)=max(1e-8, baseline_rate*exp(covariate_effect*c)); log-rate link
+    before the numerical floor. T | c ~ Exponential(rate=r(c)), E[T | c]=1/r(c).
+    The observation is (min(T,censor_time), 1[T>censor_time]), fixed per subject.
+    Subject IDs retrieve observations; the latent covariate has no finite input domain.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"baseline_rate":"inverse natural time units","covariate_effect":"log-hazard change per latent covariate unit","censor_time":"natural time units","n_subjects":"number of subjects"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "CensoredExponential" %}
+        {% set link = "log rate before positive floor" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "subject IDs retrieve fixed censored observations; latent covariate is Normal(0,1)" %}
+        {% include "_response_law.j2" +%}
+        self._baseline_rate = float(self.response_law["parameters"]["baseline_rate"]["value"])
+        self._covariate_effect = float(self.response_law["parameters"]["covariate_effect"]["value"])
+        self._censor_time = float(self.response_law["parameters"]["censor_time"]["value"])
+        self._n_subjects = int(self.response_law["parameters"]["n_subjects"]["value"])
+        {% set features = ["subject_id"] %}
+        {% include "_feature_domains.j2" +%}
+        self._feature_names = ["subject_id"]
+        self._integer_features = frozenset(self._feature_names)
+        self._multi_feature_input = False
+        self._times: np.ndarray | None = None
+        self._covariates: np.ndarray | None = None
+        self._censored: np.ndarray | None = None
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+        covs = self._rng.normal(0, 1, size=self._n_subjects)
+        rates = self._baseline_rate * np.exp(self._covariate_effect * covs)
+        raw_times = self._rng.exponential(1.0 / np.clip(rates, 1e-8, None))
+        self._censored = (raw_times > self._censor_time).astype(int)
+        self._times = np.minimum(raw_times, self._censor_time)
+        self._covariates = covs
+        self.response_law["latent_parameters"].update({
+            "covariates": self._covariates.tolist(),
+            "times": self._times.tolist(),
+            "censored": self._censored.tolist(),
+        })
+
+    def step(self, x_values: tuple[float, ...]) -> tuple[float, int]:
+        subject_id = x_values[0]
+        t = float(self._times[subject_id])
+        c = int(self._censored[subject_id])
+        return t, c
+
+    def _observation_row(self, x_values: tuple[float, ...], result: Any) -> tuple[Any, ...]:
+        subject_id = x_values[0]
+        return (subject_id, float(self._covariates[subject_id]), *result)
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["subject_id", "covariate", "{{ target_name }}", "censored"]
+
+    def get_ordered_features(self) -> list[str]:
+        return ["subject_id", "covariate"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a survival-analysis environment. Provide "
+            "an integer subject ID to observe their time-to-event and censoring status."
+        )
+        if include_prior:
+            base += (
+                " Prior context: survival times follow an exponential distribution "
+                "with a covariate-dependent rate. Observations may be right-censored."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

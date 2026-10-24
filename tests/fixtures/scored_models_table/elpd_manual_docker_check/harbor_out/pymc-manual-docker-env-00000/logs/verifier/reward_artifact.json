@@ -1,0 +1,157 @@
+{
+  "schema_version": "synthstats.harbor.reward.v1",
+  "reward": 2.719488,
+  "reward_source": "validation.pymc_elpd",
+  "evidence_kind": "verifier",
+  "truth_owner": "verifier",
+  "producer": "ppl_synth_data.harbor.validator_template",
+  "metrics": {
+    "avg_holdout_logp": 1.246894,
+    "holdout_elpd": 2.4938,
+    "train_elpd_loo": 8.551,
+    "pareto_k_max": 0.8366,
+    "baseline_score": -2.9312975768532805,
+    "gold_score": 2.4913810469629794,
+    "temperature": 5.42267863381626,
+    "passed_layers": 7,
+    "total_layers": 7
+  },
+  "diagnostics": {
+    "details": {
+      "L0_parse": {
+        "passed": true,
+        "time_s": 0.0
+      },
+      "L1_ast_safety": {
+        "passed": true,
+        "time_s": 0.0
+      },
+      "L2_model_build": {
+        "passed": true,
+        "time_s": 2.494
+      },
+      "L3_harbor_pymc_strict_profile": {
+        "passed": true,
+        "time_s": 0.003
+      },
+      "L4_exploit_heuristics": {
+        "passed": true,
+        "time_s": 0.004
+      },
+      "L5_data_perturbation": {
+        "passed": true,
+        "time_s": 0.083
+      }
+    },
+    "failed_layer": null,
+    "failure_reason": null,
+    "semantic_status": "pass",
+    "elpd_status": "scored",
+    "avg_holdout_logp": 1.2468936067014922,
+    "pareto_k_warning": true,
+    "density_gates": [
+      {
+        "name": "min_predictive_scale",
+        "passed": true,
+        "detail": "min_pred_std=0.1121 threshold=0.003803 (>= 0.01 * data_std)"
+      }
+    ]
+  },
+  "provenance": {
+    "runtime": "pymc",
+    "verifier": "harbor_pymc_l0_l6",
+    "profile": "strict"
+  },
+  "reward_transform": {
+    "kind": "baseline_normalized_log_reward",
+    "baseline_score": -2.9312975768532805,
+    "gold_score": 2.4913810469629794,
+    "temperature": 5.42267863381626,
+    "lower_log_reward_bound": -20.0
+  },
+  "training_log_reward": 1.000444,
+  "components": {
+    "holdout_elpd": 2.4938
+  },
+  "reward_components": [
+    {
+      "name": "holdout_elpd",
+      "kind": "terminal_verifier",
+      "value": 2.4938,
+      "source": "validation.pymc_elpd",
+      "evidence_kind": "verifier",
+      "truth_owner": "verifier",
+      "producer": "ppl_synth_data.harbor.validator_template",
+      "weight": 1.0,
+      "log_contribution": 1.000444,
+      "metrics": {
+        "baseline_score": -2.9312975768532805,
+        "temperature": 5.42267863381626,
+        "train_elpd_loo": 8.551042447715705,
+        "pareto_k_max": 0.836622645633905,
+        "hidden_n_obs": 2
+      },
+      "diagnostics": {
+        "details": {
+          "L0_parse": {
+            "passed": true,
+            "time_s": 0.0
+          },
+          "L1_ast_safety": {
+            "passed": true,
+            "time_s": 0.0
+          },
+          "L2_model_build": {
+            "passed": true,
+            "time_s": 2.494
+          },
+          "L3_harbor_pymc_strict_profile": {
+            "passed": true,
+            "time_s": 0.003
+          },
+          "L4_exploit_heuristics": {
+            "passed": true,
+            "time_s": 0.004
+          },
+          "L5_data_perturbation": {
+            "passed": true,
+            "time_s": 0.083
+          }
+        },
+        "failed_layer": null,
+        "failure_reason": null,
+        "semantic_status": "pass",
+        "elpd_status": "scored",
+        "avg_holdout_logp": 1.2468936067014922,
+        "pareto_k_warning": true,
+        "density_gates": [
+          {
+            "name": "min_predictive_scale",
+            "passed": true,
+            "detail": "min_pred_std=0.1121 threshold=0.003803 (>= 0.01 * data_std)"
+          }
+        ]
+      },
+      "provenance": {
+        "runtime": "pymc",
+        "verifier": "harbor_pymc_l0_l6",
+        "profile": "strict"
+      }
+    }
+  ],
+  "scalarization": {
+    "method": "weighted_sum",
+    "component_names": [
+      "holdout_elpd"
+    ],
+    "weights": {
+      "holdout_elpd": 1.0
+    },
+    "lower_log_reward_bound": -20.0,
+    "temperature": 5.42267863381626,
+    "diagnostics": {
+      "baseline_score": -2.9312975768532805,
+      "gold_score": 2.4913810469629794
+    }
+  }
+}

@@ -1,0 +1,16 @@
+run:
+  root: artifacts/runs
+  seed: 0
+
+providers:
+  default_backend: openai
+  openai:
+    model_envspec: gpt-5.5-pro
+    model_prompt: gpt-5.5-pro
+    model_completion: gpt-5.5-pro
+    model_repair: gpt-5.5-pro
+  proxy:
+    model: gpt-5.5-pro
+  judge:
+    backend: glm
+    model: glm-5

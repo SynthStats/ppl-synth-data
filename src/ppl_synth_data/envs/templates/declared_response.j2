@@ -1,0 +1,8 @@
+import json
+
+from ppl_synth_data.envs.declared_response import DeclaredResponseEnv
+
+
+class {{ class_name }}(DeclaredResponseEnv):
+    def __init__(self, seed=None):
+        super().__init__(json.loads({{ spec | tojson | tojson }}), seed=seed)

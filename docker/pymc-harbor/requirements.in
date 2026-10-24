@@ -1,0 +1,14 @@
+# Direct requirements of the PyMC Harbor scorer image and of its image-only tests.
+# The order matters: uv takes the newest version of an earlier line first.
+pymc<6
+pytensor
+arviz
+numpy
+scipy
+pandas
+pyarrow
+pytest
+pydantic
+pydantic-settings
+PyYAML
+jinja2

@@ -1,0 +1,71 @@
+{
+  "schema_version": "synthstats.harbor.reward.v1",
+  "reward": 0.0,
+  "reward_source": "heuristic.pymc_elpd_error",
+  "evidence_kind": "heuristic",
+  "truth_owner": "heuristic",
+  "producer": "ppl_synth_data.harbor.validator_template",
+  "metrics": {
+    "passed_layers": 6,
+    "total_layers": 7
+  },
+  "diagnostics": {
+    "details": {},
+    "failed_layer": "L6_holdout_elpd",
+    "failure_reason": "worker died before handshake",
+    "semantic_status": "critical",
+    "elpd_status": "sampling_failed",
+    "elpd_error": "worker died before handshake"
+  },
+  "provenance": {
+    "runtime": "pymc",
+    "verifier": "harbor_pymc_l0_l6",
+    "profile": "strict"
+  },
+  "reward_transform": {
+    "kind": "baseline_normalized_log_reward",
+    "lower_log_reward_bound": -20.0,
+    "error_policy": "heuristic_floor"
+  },
+  "training_log_reward": -20.0,
+  "components": {
+    "pymc_elpd_error": 0.0
+  },
+  "reward_components": [
+    {
+      "name": "pymc_elpd_error",
+      "kind": "penalty",
+      "value": 0.0,
+      "source": "heuristic.pymc_elpd_error",
+      "evidence_kind": "heuristic",
+      "truth_owner": "heuristic",
+      "producer": "ppl_synth_data.harbor.validator_template",
+      "weight": 1.0,
+      "log_contribution": -20.0,
+      "metrics": {},
+      "diagnostics": {
+        "details": {},
+        "failed_layer": "L6_holdout_elpd",
+        "failure_reason": "worker died before handshake",
+        "semantic_status": "critical",
+        "elpd_status": "sampling_failed",
+        "elpd_error": "worker died before handshake"
+      },
+      "provenance": {
+        "runtime": "pymc",
+        "verifier": "harbor_pymc_l0_l6",
+        "profile": "strict"
+      }
+    }
+  ],
+  "scalarization": {
+    "method": "manual",
+    "component_names": [
+      "pymc_elpd_error"
+    ],
+    "weights": {
+      "pymc_elpd_error": 1.0
+    },
+    "lower_log_reward_bound": -20.0
+  }
+}

@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ppl-synth-data"
+version = "0.1.0"
+description = "SFT dataset generator for probabilistic program synthesis"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Younesse Kaddar", email = "younesse.kaddar@cs.ox.ac.uk" }
+]
+dependencies = [
+  "typer>=0.16.0",
+  "pydantic>=2.11.0",
+  "pydantic-settings>=2.7.0",
+  "jinja2>=3.1.6",
+  "pyyaml>=6.0.2",
+  "numpy>=2.2.0",
+  "pandas>=2.2.3",
+  "pyarrow>=21.0.0",
+  "scipy>=1.14.0",
+  "openai>=2.3.0",
+  "litellm>=1.83.3",
+  "boto3>=1.40.0",
+  "datasets>=4.0.0",
+  "pymc>=5.0",
+  "jsonschema==4.23.0",
+  "synthstats-schemas",
+]
+
+[tool.uv.sources]
+synthstats-schemas = { git = "https://github.com/SynthStats/synthstats-schemas", rev = "18fa38add1752ee2db66ed9bf0c3cd27e173eb4e" }
+
+[project.optional-dependencies]
+dev = [
+  "hypothesis",
+  "pytest>=8.3.0",
+  "pytest-cov>=6.0.0",
+  "ruff>=0.9.0",
+  "mypy>=1.14.0",
+  "bandit>=1.8.0",
+  "types-PyYAML>=6.0.12",
+]
+
+[project.scripts]
+ppldf = "ppl_synth_data.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ppl_synth_data*"]
+
+[tool.setuptools.package-data]
+ppl_synth_data = [
+  "resources/*.txt",
+  "dataset/*.md",
+  "llm/prompts/*.md",
+  "envs/templates/*.j2",
+  "harbor/templates/*.j2",
+  "harbor/templates/*.sh",
+  "harbor/templates/*.py",
+  "harbor/validator_template.py",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short -m \"not paid_lane and not heavy_lane\""
+markers = [
+  "slow: long-running subprocess tests",
+  "docker: Harbor Docker integration tests",
+  "real_boundary: real subprocess/OS-level security boundary tests (no mocks)",
+  "narrow_unit_not_acceptance: narrow unit test; NOT acceptance evidence for any capability claim",
+  "acceptance: acceptance-layer test of a complete feature",
+  "paid_lane: real paid provider call (OpenAI, Bedrock, HF Hub write, RunPod, Tinker); run explicitly with credentials",
+  "heavy_lane: requires provisioned substrate (Docker+GHC+GHCR image, the SkyRL online-train env, or out-of-repo release artifacts); run on a host with the required dependencies and artifacts",
+]
+
+[tool.coverage.run]
+source = ["ppl_synth_data"]
+omit = ["*/harbor/validator_template.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 0
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__",
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+check_untyped_defs = true

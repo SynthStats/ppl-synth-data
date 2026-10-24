@@ -1,0 +1,5 @@
+        {% set checked_coefficients = require_coefficients(spec, features) %}
+        self._slopes = np.array([
+            self.response_law["parameters"]["coefficients"]["value"][name]
+            for name in self._feature_names
+        ], dtype=float)

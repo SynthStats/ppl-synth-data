@@ -1,0 +1,59 @@
+{
+  "task_id": "lazyppl_pilot_dugongs",
+  "language": "lazyppl",
+  "environment": "dugongs",
+  "columns": [
+    {
+      "name": "xVal",
+      "hs_type": "Double"
+    },
+    {
+      "name": "yVal",
+      "hs_type": "Double"
+    }
+  ],
+  "observations": [
+    {
+      "xVal": 1.0,
+      "yVal": 1.7805
+    },
+    {
+      "xVal": 2.0,
+      "yVal": 1.967
+    },
+    {
+      "xVal": 3.0,
+      "yVal": 1.9886
+    },
+    {
+      "xVal": 5.0,
+      "yVal": 2.135
+    },
+    {
+      "xVal": 7.0,
+      "yVal": 2.1911
+    },
+    {
+      "xVal": 10.0,
+      "yVal": 2.3877
+    },
+    {
+      "xVal": 15.0,
+      "yVal": 2.6411
+    },
+    {
+      "xVal": 20.0,
+      "yVal": 2.6326
+    },
+    {
+      "xVal": 25.0,
+      "yVal": 2.7239
+    },
+    {
+      "xVal": 30.0,
+      "yVal": 2.66
+    }
+  ],
+  "n_observations": 10,
+  "description": "Von Bertalanffy growth model for dugong (sea cow) lengths as a function of age"
+}

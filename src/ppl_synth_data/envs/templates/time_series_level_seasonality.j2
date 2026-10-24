@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: z=(t-lo)/(hi-lo), using the declared time domain.
+
+    Mean mu(t)=base_level + trend*z + season_amplitude*sin(2*pi*t/season_period).
+    Response Y | t ~ Normal(mu(t), noise_sigma**2), independently per query;
+    identity link. Trend is the full-domain response change. Season period uses
+    natural time units with sine origin t=0; level, amplitude and noise use response units.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"base_level":"response units at lower time bound before seasonality","trend":"response change per full time domain span","season_period":"natural time units; sine origin is t=0","season_amplitude":"response units","noise_sigma":"response units (standard deviation)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "Normal" %}
+        {% set link = "identity" %}
+        {% set standardization = "minmax" %}
+        {% set standardization_application = "time for trend only; sine uses natural t and period with origin t=0" %}
+        {% include "_response_law.j2" +%}
+        self._base_level = float(self.response_law["parameters"]["base_level"]["value"])
+        self._trend = float(self.response_law["parameters"]["trend"]["value"])
+        self._season_period = float(self.response_law["parameters"]["season_period"]["value"])
+        self._season_amplitude = float(self.response_law["parameters"]["season_amplitude"]["value"])
+        self._noise_sigma = float(self.response_law["parameters"]["noise_sigma"]["value"])
+        {% set features = ["t"] %}
+        {% include "_feature_domains.j2" +%}
+        self._feature_names = ["t"]
+        self._integer_features = frozenset(self._feature_names)
+        self._multi_feature_input = False
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+
+    def step(self, x_values: tuple[float, ...]) -> float:
+        t = x_values[0]
+        z = self._standardize_features((float(t),))[0]
+        level = self._base_level + self._trend * z
+        seasonal = self._season_amplitude * np.sin(
+            2.0 * np.pi * t / self._season_period
+        )
+        return float(level + seasonal + self._rng.normal(0.0, self._noise_sigma))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["t", "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a time-series environment. Provide an integer "
+            "time index as input and receive a continuous observation."
+        )
+        if include_prior:
+            base += (
+                " Prior context: the series has a linear trend component and "
+                "a periodic seasonal component with Gaussian noise."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

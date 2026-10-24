@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+from scipy.special import expit
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: student abilities and question difficulties are Gaussian
+    with the specified means and sigmas; discriminations are absolute Gaussian
+    draws with mean discrimination_mean and standard deviation 0.3.
+
+    Conditional on these construction-time effects, queries independently draw
+    Y~Bernoulli(expit(clip(discrimination*(ability-difficulty), -500, 500))).
+    That probability is E[Y]; logit link before clipping. IDs index latent effects,
+    with declared integer domains bounded by the structural counts.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"n_students":"number of students","n_questions":"number of questions","ability_mean":"latent ability units","ability_sigma":"latent ability units (standard deviation)","difficulty_mean":"latent ability units","difficulty_sigma":"latent ability units (standard deviation)","discrimination_mean":"log odds per latent ability unit (Gaussian mean before absolute value)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "Bernoulli" %}
+        {% set link = "logit before clipping" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "IDs index latent abilities/difficulties; absolute Gaussian discrimination has fixed sigma 0.3" %}
+        {% include "_response_law.j2" +%}
+        self._n_students = int(self.response_law["parameters"]["n_students"]["value"])
+        self._n_questions = int(self.response_law["parameters"]["n_questions"]["value"])
+        ability_mean = float(self.response_law["parameters"]["ability_mean"]["value"])
+        ability_sigma = float(self.response_law["parameters"]["ability_sigma"]["value"])
+        difficulty_mean = float(self.response_law["parameters"]["difficulty_mean"]["value"])
+        difficulty_sigma = float(self.response_law["parameters"]["difficulty_sigma"]["value"])
+        discrimination_mean = float(self.response_law["parameters"]["discrimination_mean"]["value"])
+
+        self._abilities = self._rng.normal(ability_mean, ability_sigma, self._n_students)
+        self._difficulties = self._rng.normal(difficulty_mean, difficulty_sigma, self._n_questions)
+        self._discriminations = np.abs(
+            self._rng.normal(discrimination_mean, 0.3, self._n_questions)
+        )
+        self.response_law["latent_parameters"].update({
+            "abilities": self._abilities.tolist(),
+            "difficulties": self._difficulties.tolist(),
+            "discriminations": self._discriminations.tolist(),
+        })
+        {% set features = ["student_id", "question_id"] %}
+        self._feature_names = ["student_id", "question_id"]
+        {% include "_feature_domains.j2" +%}
+        self._integer_features = frozenset(self._feature_names)
+        self._multi_feature_input = True
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+        self._rng = rng
+
+    def step(self, x_values: tuple[float, ...]) -> int:
+        student_id, question_id = x_values
+        ability = self._abilities[student_id]
+        difficulty = self._difficulties[question_id]
+        discrimination = self._discriminations[question_id]
+        p = float(expit(np.clip(discrimination * (ability - difficulty), -500.0, 500.0)))
+        return int(self._rng.binomial(1, p))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["student_id", "question_id", "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a test-response environment. Provide a JSON "
+            "object with 'student_id' and 'question_id' to observe whether the "
+            "student answered correctly (1) or not (0)."
+        )
+        if include_prior:
+            base += (
+                " Prior context: response probability depends on student ability "
+                "and question difficulty through a nonlinear link."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

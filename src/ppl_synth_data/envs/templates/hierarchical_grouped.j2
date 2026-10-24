@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: each new group g draws b_g~Normal(0, 3**2).
+
+    Conditional on b_g, independent queries draw X~Normal(base_mean+b_g, noise_sigma**2)
+    and return Y=max(0, X). Identity link before censoring at zero; the underlying
+    Gaussian mean is base_mean+b_g, and E[Y | g] is its positive-part expectation.
+    Integer group identifiers index latent effects; they are not numeric covariates to standardize.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        {% set parameter_units = {"base_mean":"response units before censoring","noise_sigma":"response units (standard deviation)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "CensoredNormal" %}
+        {% set link = "identity before censoring" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "group labels index Gaussian effects with fixed standard deviation 3 response units" %}
+        {% include "_response_law.j2" +%}
+        self._base_mean = float(self.response_law["parameters"]["base_mean"]["value"])
+        self._noise_sigma = float(self.response_law["parameters"]["noise_sigma"]["value"])
+        {% set features = [group_field] %}
+        self._feature_names = [{{ group_field | tojson }}]
+        {% include "_feature_domains.j2" +%}
+        self._integer_features = frozenset(self._feature_names)
+        self._multi_feature_input = True
+        self._group_effects: dict[str, float] = {}
+        self.include_prior: bool = False
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+        self._group_effects = {}
+        self.response_law["latent_parameters"]["group_effects"] = self._group_effects
+
+    def step(self, x_values: tuple[float, ...]) -> float:
+        gv = str(x_values[0])
+        if gv not in self._group_effects:
+            self._group_effects[gv] = float(self._rng.normal(0.0, 3.0))
+        mean = self._base_mean + self._group_effects[gv]
+        return float(max(0.0, self._rng.normal(mean, self._noise_sigma)))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["{{ group_field }}", "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with an environment that returns observed "
+            "{{ target_name }} values grouped by {{ group_field }}. "
+            "Provide queries as JSON, e.g. "
+            '{\"{{ group_field }}\": 0}. '
+            "Collect data and propose a probabilistic model."
+        )
+        if include_prior:
+            base += " Prior context: {{ target_name }} is non-negative and group-dependent."
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

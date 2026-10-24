@@ -1,0 +1,8 @@
+.git
+__pycache__
+*.pyc
+dist-newstyle
+.stack-work
+.cabal-sandbox
+*.o
+*.hi

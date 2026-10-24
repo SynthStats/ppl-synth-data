@@ -1,0 +1,51 @@
+{
+  "task_id": "lazyppl_pilot_eight_schools",
+  "language": "lazyppl",
+  "environment": "eight_schools",
+  "columns": [
+    {
+      "name": "effect",
+      "hs_type": "Double"
+    },
+    {
+      "name": "se",
+      "hs_type": "Double"
+    }
+  ],
+  "observations": [
+    {
+      "effect": 2.21,
+      "se": 15.0
+    },
+    {
+      "effect": -2.32,
+      "se": 10.0
+    },
+    {
+      "effect": -33.97,
+      "se": 16.0
+    },
+    {
+      "effect": 5.76,
+      "se": 11.0
+    },
+    {
+      "effect": 7.69,
+      "se": 9.0
+    },
+    {
+      "effect": 5.1,
+      "se": 11.0
+    },
+    {
+      "effect": -14.17,
+      "se": 10.0
+    },
+    {
+      "effect": -32.68,
+      "se": 18.0
+    }
+  ],
+  "n_observations": 8,
+  "description": "Hierarchical normal model for educational program effects (Rubin 1981)"
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "synthstats.harbor.reward.v1",
+  "reward": 0.0,
+  "reward_source": "validation.compilation",
+  "evidence_kind": "verifier",
+  "truth_owner": "verifier",
+  "producer": "ppl_synth_data.harbor.validator_template",
+  "metrics": {
+    "cascade_reward": 0.0,
+    "passed_layers": 2,
+    "total_layers": 6
+  },
+  "reward_components": [
+    {
+      "name": "compilation_cascade",
+      "kind": "terminal_verifier",
+      "value": 0.0,
+      "source": "validation.compilation",
+      "evidence_kind": "verifier",
+      "truth_owner": "verifier",
+      "producer": "ppl_synth_data.harbor.validator_template",
+      "weight": 1.0,
+      "log_contribution": -20.0,
+      "confidence": 1.0,
+      "metrics": {
+        "cascade_reward": 0.0,
+        "passed_layers": 2,
+        "total_layers": 6
+      },
+      "diagnostics": {
+        "failed_layer": "L2_model_build",
+        "failure_reason": "model(data) raised: AttributeError: module 'pymc.math' has no attribute 'sort'",
+        "semantic_status": "critical"
+      },
+      "provenance": {
+        "runtime": "pymc",
+        "verifier": "harbor_pymc_l0_l5",
+        "profile": "strict"
+      }
+    }
+  ],
+  "scalarization": {
+    "method": "weighted_sum",
+    "component_names": [
+      "compilation_cascade"
+    ],
+    "weights": {
+      "compilation_cascade": 1.0
+    },
+    "lower_log_reward_bound": -20.0,
+    "diagnostics": {
+      "reward_transform": "binary_log_reward"
+    }
+  },
+  "diagnostics": {
+    "details": {
+      "L0_parse": {
+        "passed": true,
+        "time_s": 0.001
+      },
+      "L1_ast_safety": {
+        "passed": true,
+        "time_s": 0.002
+      },
+      "L2_model_build": {
+        "passed": false,
+        "time_s": 4.186,
+        "reason": "model(data) raised: AttributeError: module 'pymc.math' has no attribute 'sort'"
+      }
+    },
+    "failed_layer": "L2_model_build",
+    "failure_reason": "model(data) raised: AttributeError: module 'pymc.math' has no attribute 'sort'",
+    "semantic_status": "critical"
+  },
+  "provenance": {
+    "runtime": "pymc",
+    "verifier": "harbor_pymc_l0_l5",
+    "profile": "strict"
+  },
+  "reward_transform": {
+    "kind": "binary_log_reward",
+    "pass_log_reward": 0.0,
+    "lower_log_reward_bound": -20.0
+  },
+  "training_log_reward": -20.0
+}

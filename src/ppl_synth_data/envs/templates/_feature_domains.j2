@@ -1,0 +1,9 @@
+        {% set domains = require_feature_domains(spec, features) %}
+        self._feature_domains = {
+        {% for name in features %}
+            {{ name | tojson }}: (
+                float({{ domains[name][0] | tojson }}),
+                float({{ domains[name][1] | tojson }}),
+            ),
+        {% endfor %}
+        }

@@ -1,0 +1,67 @@
+{
+  "task_id": "lazyppl_pilot_surgical",
+  "language": "lazyppl",
+  "environment": "surgical",
+  "columns": [
+    {
+      "name": "deaths",
+      "hs_type": "Int"
+    },
+    {
+      "name": "exposure",
+      "hs_type": "Int"
+    }
+  ],
+  "observations": [
+    {
+      "deaths": 6,
+      "exposure": 1767
+    },
+    {
+      "deaths": 16,
+      "exposure": 2367
+    },
+    {
+      "deaths": 7,
+      "exposure": 2145
+    },
+    {
+      "deaths": 20,
+      "exposure": 1098
+    },
+    {
+      "deaths": 17,
+      "exposure": 2389
+    },
+    {
+      "deaths": 3,
+      "exposure": 1876
+    },
+    {
+      "deaths": 18,
+      "exposure": 2134
+    },
+    {
+      "deaths": 7,
+      "exposure": 1567
+    },
+    {
+      "deaths": 38,
+      "exposure": 2897
+    },
+    {
+      "deaths": 6,
+      "exposure": 1234
+    },
+    {
+      "deaths": 6,
+      "exposure": 1876
+    },
+    {
+      "deaths": 4,
+      "exposure": 2456
+    }
+  ],
+  "n_observations": 12,
+  "description": "Hierarchical Poisson model for hospital surgical mortality rates"
+}

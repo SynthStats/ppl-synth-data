@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: on reset, source positions are uniform on the declared coordinate rectangle
+    and strengths uniform on [0.5*source_strength,1.5*source_strength].
+
+    Given those sources, mu(x,y)=background+sum(strength_k/(regularization_m+
+    squared_distance((x,y),source_k))). Independent responses are
+    Normal(mu(x,y),noise_sigma**2); identity link. Coordinates retain the physical
+    units of the nonlinear distance law.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"n_sources":"number of sources","dim":"number of coordinates","background":"response units","regularization_m":"squared coordinate units","source_strength":"response units times squared coordinate units","noise_sigma":"response units (standard deviation)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "Normal" %}
+        {% set link = "identity" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "physical x,y distance; sources Uniform(declared x,y domains), strengths Uniform(0.5*s,1.5*s)" %}
+        {% include "_response_law.j2" +%}
+        self._n_sources = int(self.response_law["parameters"]["n_sources"]["value"])
+        self._dim = int(self.response_law["parameters"]["dim"]["value"])
+        self._background = float(self.response_law["parameters"]["background"]["value"])
+        self._regularization_m = float(self.response_law["parameters"]["regularization_m"]["value"])
+        self._source_strength = float(self.response_law["parameters"]["source_strength"]["value"])
+        self._noise_sigma = float(self.response_law["parameters"]["noise_sigma"]["value"])
+
+        {% set features = ["x", "y"] %}
+        self._feature_names = ["x", "y"]
+        {% include "_feature_domains.j2" +%}
+        self._multi_feature_input = True
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+        lower, upper = np.asarray([self._feature_domains[n] for n in self._feature_names]).T
+        self._sources = self._rng.uniform(lower, upper, size=(self._n_sources, self._dim))
+        self._alphas = self._rng.uniform(
+            0.5 * self._source_strength, 1.5 * self._source_strength, self._n_sources
+        )
+        self.response_law["latent_parameters"].update({
+            "source_positions": self._sources.tolist(),
+            "strengths": self._alphas.tolist(),
+        })
+
+    def step(self, x_values: tuple[float, ...]) -> float:
+        point = np.array(x_values)
+        intensity = self._background
+        for k in range(self._n_sources):
+            dist_sq = float(np.sum((point - self._sources[k]) ** 2))
+            intensity += self._alphas[k] / (self._regularization_m + dist_sq)
+        return float(intensity + self._rng.normal(0.0, self._noise_sigma))
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["x", "y", "{{ target_name }}"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a spatial signal environment. "
+            "Provide a JSON object with 'x' and 'y' coordinates to measure "
+            "signal intensity at that location."
+        )
+        if include_prior:
+            base += (
+                " Prior context: signal intensity depends on distance to "
+                "unknown source locations with additive noise."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

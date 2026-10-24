@@ -1,0 +1,6 @@
+stage: envspec
+model: gpt-5.5
+batch_size: 5000
+structured_outputs: true
+reasoning_effort: none
+max_output_tokens: 8192

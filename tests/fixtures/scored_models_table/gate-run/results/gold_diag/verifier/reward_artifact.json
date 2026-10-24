@@ -1,0 +1,159 @@
+{
+  "schema_version": "synthstats.harbor.reward.v1",
+  "reward": 2.694178,
+  "reward_source": "validation.pymc_elpd",
+  "evidence_kind": "verifier",
+  "truth_owner": "verifier",
+  "producer": "ppl_synth_data.harbor.validator_template",
+  "metrics": {
+    "avg_holdout_logp": -1.778521,
+    "holdout_elpd": -128.0535,
+    "train_elpd_loo": -522.2893,
+    "pareto_k_max": 0.5621,
+    "baseline_score": -175.53438929247912,
+    "gold_score": -127.62678590412567,
+    "temperature": 47.90760339835345,
+    "passed_layers": 7,
+    "total_layers": 7
+  },
+  "diagnostics": {
+    "details": {
+      "L0_parse": {
+        "passed": true,
+        "time_s": 0.001
+      },
+      "L1_ast_safety": {
+        "passed": true,
+        "time_s": 0.003
+      },
+      "L2_model_build": {
+        "passed": true,
+        "time_s": 5.101
+      },
+      "L3_harbor_pymc_strict_profile": {
+        "passed": true,
+        "time_s": 0.187
+      },
+      "L4_exploit_heuristics": {
+        "passed": true,
+        "time_s": 0.18
+      },
+      "L5_data_perturbation": {
+        "passed": true,
+        "time_s": 1.122
+      }
+    },
+    "failed_layer": null,
+    "failure_reason": null,
+    "semantic_status": "pass",
+    "elpd_status": "scored",
+    "avg_holdout_logp": -1.7785207773834533,
+    "pareto_k_warning": false,
+    "density_gate_status": "applied",
+    "density_gates": [
+      {
+        "name": "min_predictive_scale",
+        "passed": true,
+        "detail": "density_gate_status=applied min_pred_std=1.612 threshold=0.0265 (>= 0.01 * data_std, measured from real posterior-predictive samples, family-agnostic)"
+      }
+    ]
+  },
+  "provenance": {
+    "runtime": "pymc",
+    "verifier": "harbor_pymc_l0_l6",
+    "profile": "strict"
+  },
+  "reward_transform": {
+    "kind": "baseline_normalized_log_reward",
+    "baseline_score": -175.53438929247912,
+    "gold_score": -127.62678590412567,
+    "temperature": 47.90760339835345,
+    "lower_log_reward_bound": -20.0
+  },
+  "training_log_reward": 0.991093,
+  "components": {
+    "holdout_elpd": -128.0535
+  },
+  "reward_components": [
+    {
+      "name": "holdout_elpd",
+      "kind": "terminal_verifier",
+      "value": -128.0535,
+      "source": "validation.pymc_elpd",
+      "evidence_kind": "verifier",
+      "truth_owner": "verifier",
+      "producer": "ppl_synth_data.harbor.validator_template",
+      "weight": 1.0,
+      "log_contribution": 0.991093,
+      "metrics": {
+        "baseline_score": -175.53438929247912,
+        "temperature": 47.90760339835345,
+        "train_elpd_loo": -522.2892506502963,
+        "pareto_k_max": 0.5620529071648104,
+        "hidden_n_obs": 72
+      },
+      "diagnostics": {
+        "details": {
+          "L0_parse": {
+            "passed": true,
+            "time_s": 0.001
+          },
+          "L1_ast_safety": {
+            "passed": true,
+            "time_s": 0.003
+          },
+          "L2_model_build": {
+            "passed": true,
+            "time_s": 5.101
+          },
+          "L3_harbor_pymc_strict_profile": {
+            "passed": true,
+            "time_s": 0.187
+          },
+          "L4_exploit_heuristics": {
+            "passed": true,
+            "time_s": 0.18
+          },
+          "L5_data_perturbation": {
+            "passed": true,
+            "time_s": 1.122
+          }
+        },
+        "failed_layer": null,
+        "failure_reason": null,
+        "semantic_status": "pass",
+        "elpd_status": "scored",
+        "avg_holdout_logp": -1.7785207773834533,
+        "pareto_k_warning": false,
+        "density_gate_status": "applied",
+        "density_gates": [
+          {
+            "name": "min_predictive_scale",
+            "passed": true,
+            "detail": "density_gate_status=applied min_pred_std=1.612 threshold=0.0265 (>= 0.01 * data_std, measured from real posterior-predictive samples, family-agnostic)"
+          }
+        ]
+      },
+      "provenance": {
+        "runtime": "pymc",
+        "verifier": "harbor_pymc_l0_l6",
+        "profile": "strict"
+      }
+    }
+  ],
+  "scalarization": {
+    "method": "weighted_sum",
+    "component_names": [
+      "holdout_elpd"
+    ],
+    "weights": {
+      "holdout_elpd": 1.0
+    },
+    "lower_log_reward_bound": -20.0,
+    "temperature": 47.90760339835345,
+    "diagnostics": {
+      "baseline_score": -175.53438929247912,
+      "gold_score": -127.62678590412567
+    }
+  }
+}

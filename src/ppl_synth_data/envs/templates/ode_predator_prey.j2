@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+from scipy.integrate import solve_ivp
+
+from ppl_synth_data.envs.base import BaseEnv
+
+
+class {{ class_name }}(BaseEnv):
+    """Declared process: solve dprey/dt=alpha*prey-beta*prey*predator and
+    dpredator/dt=delta*prey*predator-gamma*predator from the specified initial state.
+
+    At the requested t, add independent Normal(0,noise_sigma**2) noise to each population,
+    round to integers and censor below zero. The pre-rounding mean is the ODE
+    solution; identity observation link before rounding/censoring. Physical time
+    remains in the differential equations' units, not a linear feature predictor.
+    """
+    env_name: str = "{{ spec['env_name'] }}"
+
+    def __init__(self, seed: int | None = None) -> None:
+        self._seed = 0 if seed is None else seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data: list[tuple[Any, ...]] = []
+        self.include_prior: bool = False
+
+        {% set parameter_units = {"alpha":"inverse natural time units","beta":"inverse predator count per natural time unit","gamma":"inverse natural time units","delta":"inverse prey count per natural time unit","prey_init":"prey count","predator_init":"predator count","noise_sigma":"population count (standard deviation before rounding and censoring)"} %}
+        {% set gp = require_parameters(spec, parameter_units) %}
+        {% set distribution = "RoundedCensoredNormal" %}
+        {% set link = "identity before rounding and censoring" %}
+        {% set standardization = "none" %}
+        {% set standardization_application = "natural time enters the ODE from origin t=0; at t=0 use the initial state" %}
+        {% include "_response_law.j2" +%}
+        self._alpha = float(self.response_law["parameters"]["alpha"]["value"])
+        self._beta = float(self.response_law["parameters"]["beta"]["value"])
+        self._gamma = float(self.response_law["parameters"]["gamma"]["value"])
+        self._delta = float(self.response_law["parameters"]["delta"]["value"])
+        self._prey_init = float(self.response_law["parameters"]["prey_init"]["value"])
+        self._predator_init = float(self.response_law["parameters"]["predator_init"]["value"])
+        self._noise_sigma = float(self.response_law["parameters"]["noise_sigma"]["value"])
+        {% set features = ["t"] %}
+        {% include "_feature_domains.j2" +%}
+        self._feature_names = ["t"]
+        self._multi_feature_input = False
+        self.reset(seed=seed)
+
+    def reset(self, seed: int | None = None) -> None:
+        if seed is not None:
+            self._seed = seed
+        self._rng = np.random.default_rng(self._seed)
+        self.observed_data = []
+
+    def _lotka_volterra(self, t: float, y: list[float]) -> list[float]:
+        prey, pred = y
+        dprey = self._alpha * prey - self._beta * prey * pred
+        dpred = self._delta * prey * pred - self._gamma * pred
+        return [dprey, dpred]
+
+    def step(self, x_values: tuple[float, ...]) -> tuple[int, int]:
+        t = x_values[0]
+        if t == 0.0:
+            prey_true, pred_true = self._prey_init, self._predator_init
+        else:
+            sol = solve_ivp(
+                self._lotka_volterra,
+                [0.0, t],
+                [self._prey_init, self._predator_init],
+                t_eval=[t],
+                method="RK45",
+            )
+            if not sol.success:
+                raise ValueError(f"ode_predator_prey: t={t} integration failed: {sol.message}")
+            prey_true = float(sol.y[0][-1])
+            pred_true = float(sol.y[1][-1])
+        prey_obs = max(0, round(prey_true + self._rng.normal(0.0, self._noise_sigma)))
+        pred_obs = max(0, round(pred_true + self._rng.normal(0.0, self._noise_sigma)))
+        return int(prey_obs), int(pred_obs)
+
+    def get_ordered_column_names(self) -> list[str]:
+        return ["t", "prey_count", "predator_count"]
+
+    def get_ordered_features(self) -> list[str]:
+        return ["t"]
+
+    def generate_system_message(self, include_prior: bool = False, goal: str | None = None) -> str:
+        base = (
+            "You are interacting with a predator-prey dynamics environment. "
+            "Provide a time value (float) and receive prey and predator population counts."
+        )
+        if include_prior:
+            base += (
+                " Prior context: populations follow coupled differential equations "
+                "with noisy observations."
+            )
+        if goal:
+            base += f" Goal: {goal}"
+        return base + self._input_domain_message()

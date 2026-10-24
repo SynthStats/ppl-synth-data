@@ -1,0 +1,17 @@
+/usr/local/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+Sampling: [warmup]
+Sampling: [warmup]
+Sampling: [difficulty_effect_by_mode, grand_mean, log_reaction_time, mode_mean_gaps, mode_sigma, mode_weight_logit_difficulty_free, mode_weight_logit_intercept_free, participant_sd, participant_z]
+Initializing NUTS using adapt_diag...
+Sequential sampling (1 chains in 1 job)
+NUTS: [grand_mean, mode_mean_gaps, difficulty_effect_by_mode, mode_sigma, participant_sd, participant_z, mode_weight_logit_intercept_free, mode_weight_logit_difficulty_free]
+Sampling 1 chain for 200 tune and 200 draw iterations (200 + 200 draws total) took 1122 seconds.
+Sampling: [log_reaction_time]
+
+real	19m2.262s
+user	0m0.025s
+sys	0m0.016s

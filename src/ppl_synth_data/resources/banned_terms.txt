@@ -1,0 +1,121 @@
+# distribution family names and aliases
+# flagged by leakage detector when they appear in prompts
+normal distribution
+normal likelihood
+normal model
+normal prior
+normally distributed
+gaussian
+bell curve
+poisson
+binomial
+bernoulli
+negative binomial
+beta distribution
+gamma distribution
+student t
+t-distribution
+lognormal
+log-normal
+weibull
+exponential distribution
+categorical distribution
+dirichlet
+multinomial
+chi-squared
+chi-square
+uniform distribution
+hypergeometric
+geometric distribution
+cauchy
+half-normal
+halfnormal
+inverse-gamma
+wishart
+inverse wishart
+logistic regression
+pareto
+power law
+gumbel
+laplace distribution
+von mises
+zero-inflated
+hurdle model
+truncated normal
+mixture of gaussians
+gaussian mixture
+# canonical parameter names that leak model choice
+shape parameter
+scale parameter
+rate parameter
+# greek letters as canonical params (only in modeling context)
+# alpha, beta, mu, sigma, theta are too common in general text,
+# so only flagged when paired with "parameter" or "prior"
+# modeling directives (turn synthesis into instruction-following)
+use a prior
+assume distributed
+fit a regression
+hierarchical model
+conjugate prior
+likelihood function
+posterior distribution
+bayesian inference
+maximum likelihood
+map estimate
+mcmc
+variational inference
+gibbs sampling
+metropolis hastings
+random effects
+fixed effects
+latent variable
+generative model
+graphical model
+plate notation
+# PPL library identifiers (prompt-to-code copy-paste risk)
+pm.normal
+pm.poisson
+pm.halfnormal
+pm.bernoulli
+pm.beta
+pm.gamma
+pm.exponential
+pm.deterministic
+dist.normal
+dist.poisson
+numpyro
+pymc
+stan model
+edward2
+tfp
+tfd
+# additional canonical parameter terms
+prior distribution
+hyperprior
+concentration parameter
+degrees of freedom
+location parameter
+dispersion parameter
+overdispersion
+# lazyppl-native families (gp, dp, changepoint, memoization, point processes)
+gaussian process
+dirichlet process
+chinese restaurant
+stick-breaking
+stick breaking
+indian buffet
+memoization
+stochastic memoization
+changepoint
+change point
+point process
+covariance function
+kernel function
+radial basis
+squared exponential
+matern
+ornstein-uhlenbeck
+wiener process
+brownian motion
+nonparametric
+non-parametric

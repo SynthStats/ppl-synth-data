@@ -1,0 +1,38 @@
+{
+ "id": "chatcmpl-1e22e1b1-6249-45fc-8062-3aa98752a276",
+ "created": 1790785207,
+ "model": "us.anthropic.claude-sonnet-4-6",
+ "object": "chat.completion",
+ "system_fingerprint": null,
+ "choices": [
+  {
+   "finish_reason": "stop",
+   "index": 0,
+   "message": {
+    "content": "11",
+    "role": "assistant",
+    "tool_calls": null,
+    "function_call": null
+   }
+  }
+ ],
+ "usage": {
+  "completion_tokens": 5,
+  "prompt_tokens": 31,
+  "total_tokens": 36,
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "text_tokens": 5
+  },
+  "prompt_tokens_details": {
+   "audio_tokens": null,
+   "cached_tokens": 0,
+   "text_tokens": 31,
+   "image_tokens": null,
+   "video_tokens": null,
+   "cache_creation_tokens": 0
+  },
+  "cache_creation_input_tokens": 0,
+  "cache_read_input_tokens": 0
+ }
+}

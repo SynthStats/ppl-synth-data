@@ -1,0 +1,59 @@
+{
+  "task_id": "lazyppl_pilot_peregrines",
+  "language": "lazyppl",
+  "environment": "peregrines",
+  "columns": [
+    {
+      "name": "year",
+      "hs_type": "Int"
+    },
+    {
+      "name": "population",
+      "hs_type": "Int"
+    }
+  ],
+  "observations": [
+    {
+      "year": 0,
+      "population": 49
+    },
+    {
+      "year": 1,
+      "population": 128
+    },
+    {
+      "year": 2,
+      "population": 218
+    },
+    {
+      "year": 3,
+      "population": 176
+    },
+    {
+      "year": 5,
+      "population": 175
+    },
+    {
+      "year": 8,
+      "population": 214
+    },
+    {
+      "year": 10,
+      "population": 220
+    },
+    {
+      "year": 15,
+      "population": 187
+    },
+    {
+      "year": 20,
+      "population": 217
+    },
+    {
+      "year": 30,
+      "population": 212
+    }
+  ],
+  "n_observations": 10,
+  "description": "Discrete logistic population growth model for peregrine falcon counts"
+}

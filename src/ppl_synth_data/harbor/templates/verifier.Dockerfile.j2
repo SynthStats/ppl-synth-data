@@ -1,0 +1,6 @@
+{{ base_dockerfile }}
+
+COPY test.sh validator.py holdout.parquet elpd_reference.json /tests/
+COPY data.parquet /workspace/data.parquet
+
+WORKDIR /workspace
