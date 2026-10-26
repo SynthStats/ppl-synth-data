@@ -248,8 +248,7 @@ def test_harbor_oracle_solves(harbor_task_dir: Path) -> None:
     assert artifact_json.exists(), "canonical reward artifact not produced"
     artifact = json.loads(artifact_json.read_text())
     assert artifact["schema_version"] == "synthstats.harbor.reward.v1"
-    # VALID_CODE is the gold itself (structurally passes L0-L5, then L6 scores
-    # its real held-out ELPD): the graded score, not the old binary pass=1.0.
+    # VALID_CODE passes L0-L5, then L6 scores its held-out ELPD.
     assert artifact["reward_source"] == "validation.pymc_elpd"
     assert artifact["producer"] == "ppl_synth_data.harbor.validator_template"
     assert artifact["diagnostics"]["elpd_status"] == "scored"

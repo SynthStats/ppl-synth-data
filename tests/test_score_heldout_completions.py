@@ -240,13 +240,7 @@ def test_bootstrap_is_deterministic_per_seed_and_point_is_seed_free() -> None:
 
 
 def test_bootstrap_at_one_pair_reports_a_zero_width_interval_clear_of_zero() -> None:
-    """Pins a degenerate case that reads as a credible improvement.
-
-    With a single paired task every resample is that one difference, so the
-    interval has no width and excludes zero. Whether the tool should refuse such
-    a contrast is an open question; the badge now carries the paired count so a
-    reader can see it, and this test fixes the arithmetic in place meanwhile.
-    """
+    """A single paired task gives a zero-width interval and a paired-count badge."""
     ci = shc.paired_bootstrap_ci(a={"t0": 0.0}, b={"t0": 3.0}, n_boot=500, seed=0)
     assert ci["n"] == 1
     assert (ci["point"], ci["ci_low"], ci["ci_high"]) == (3.0, 3.0, 3.0)
@@ -255,16 +249,10 @@ def test_bootstrap_at_one_pair_reports_a_zero_width_interval_clear_of_zero() -> 
 
 
 # --------------------------------------------------------------------------- #
-# What the per-arm aggregate and the paired contrast disagree about
+# Task membership in per-arm aggregates and paired contrasts
 # --------------------------------------------------------------------------- #
 def test_repeated_task_id_counts_once_in_the_contrast_and_twice_in_the_aggregate() -> None:
-    """Pins a silent divergence between the two numbers the report prints.
-
-    ``aggregate`` walks the score list, so a task scored twice counts twice.
-    ``build_comparison`` keys by task id, so the second score overwrites the
-    first and the contrast sees one task. Nothing warns, and the arm table and
-    the contrast table end up describing different samples.
-    """
+    """Aggregates count score entries; paired contrasts count distinct task identifiers."""
     base = [_score("t0", passed=False, logp=-3.0), _score("t1", passed=False, logp=-3.0)]
     sft = [
         _score("t0", passed=True, logp=-1.0),
@@ -338,15 +326,7 @@ def test_cascade_data_conversion_arrays_sequences_and_leaves_scalars_alone() -> 
 @pytest.mark.slow
 @pytest.mark.real_boundary
 def test_cascade_verdict_lives_under_diagnostics_and_depends_on_column_type() -> None:
-    """Two facts about the artifact ``score_one`` reads its safety verdict from.
-
-    The verdict is nested under ``diagnostics``, so reading ``failed_layer`` at
-    the top level always sees nothing. And ``_halve_data`` shortens only values
-    that are already arrays, so the plain lists a JSON eval set delivers perturb
-    to themselves and the perturbation layer reports every model as ignoring its
-    data. ``score_one`` therefore hands the cascade arrays, as the npz-loading
-    callers do.
-    """
+    """The cascade verdict is nested in diagnostics, and its perturbation operates on arrays."""
     from ppl_synth_data.harbor.validator_template import run_cascade
     from ppl_synth_data.runtimes.pymc_runtime import PyMCRuntime
 
@@ -364,17 +344,7 @@ def test_cascade_verdict_lives_under_diagnostics_and_depends_on_column_type() ->
 @pytest.mark.slow
 @pytest.mark.real_boundary
 def test_score_one_over_a_real_gold_completion() -> None:
-    """Runs the whole per-completion path on one real gold task, and pins a gap.
-
-    Format, runtime build and Harbor safety all pass on a real verifier-validated
-    gold program. The semantic scorer still reports ``critical`` because the
-    program opens with ``import pymc as pm`` and the semantic harness bans every
-    import statement, unlike the two other syntax gates in this repo, which
-    allowlist them. The second half of this test removes the imports and shows
-    the same program then yields a finite held-out log predictive density, so the
-    import gate is the only thing standing between this completion and a score.
-    Invert the pinned half once that gate is reconciled.
-    """
+    """Exercise the validation gates with import-bearing and import-free model programs."""
     from ppl_synth_data.validation.pymc_semantics import score_pymc_semantics
 
     task_id, visible, hidden, completion = _sealed_gold_task()

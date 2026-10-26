@@ -57,7 +57,6 @@ def test_reexport_cli_forwards_packages_and_runtime_options(monkeypatch, tmp_pat
         "reference_workers": 2,
         "allow_unlocked_reference_runtime": True,
         "scorer_image": "sha256:image",
-        "instruction_corrections": None,
         "role_manifest_path": tmp_path / "ROLE-MANIFEST.json",
         "role_manifest_sha256": "d" * 64,
         "attempt_id": "attempt-1",

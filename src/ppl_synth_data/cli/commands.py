@@ -133,12 +133,6 @@ def reexport_harbor(
     excluded: Annotated[
         list[str] | None, typer.Option("--exclude", help="Task name to exclude; repeatable")
     ] = None,
-    instruction_corrections: Annotated[
-        Path | None,
-        typer.Option(
-            "--instruction-corrections", help="JSON table of exact task text replacements"
-        ),
-    ] = None,
     reference_workers: Annotated[
         int, typer.Option("--reference-workers", min=1, help="Concurrent per-task reference jobs")
     ] = 1,
@@ -155,10 +149,7 @@ def reexport_harbor(
     ] = None,
 ) -> None:
     """Recompute references and refresh verifier files in existing PyMC packages."""
-    from ppl_synth_data.harbor.export_pymc import (
-        load_instruction_corrections,
-        reexport_harbor_tasks,
-    )
+    from ppl_synth_data.harbor.export_pymc import reexport_harbor_tasks
 
     result = reexport_harbor_tasks(
         sources,
@@ -172,9 +163,6 @@ def reexport_harbor(
         reference_workers=reference_workers,
         allow_unlocked_reference_runtime=allow_unlocked_reference_runtime,
         scorer_image=scorer_image,
-        instruction_corrections=load_instruction_corrections(instruction_corrections)
-        if instruction_corrections is not None
-        else None,
     )
     typer.echo(json.dumps(result, indent=2))
 

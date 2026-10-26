@@ -1,7 +1,6 @@
 """An artificial half-size covariance must not floor a valid equal split.
 
-Regression caught: letting the diagnostic probe's non-square Cholesky error
-escape to holdout_shape_analysis_failed instead of scoring the real split.
+The diagnostic probe's non-square Cholesky error leaves the real split scoreable.
 """
 
 import json

@@ -3,7 +3,7 @@
 This is a re-partition and never a filter: every input row appears in exactly
 one output split, and the script raises if the totals disagree. Splitting logic
 lives in `ppl_synth_data.dataset.split`; this entrypoint reads a source release,
-writes the repaired one, and records the provenance needed to reproduce it.
+writes the group-disjoint splits, and records their provenance.
 
     uv run python scripts/build_pymc_sft_group_disjoint_split.py \
         --source <source-pymc-dir> --out <destination-root>

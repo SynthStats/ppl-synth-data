@@ -562,9 +562,7 @@ class TestMain:
         assert harbor_rewards["training_log_reward"] == -20.0
 
     def test_main_missing_holdout_is_fail_loud_not_silent_pass(self, tmp_path, monkeypatch):
-        """A structurally-good model with NO holdout data must floor, never
-        silently pass with reward=1.0 (the exact defect this slice fixes).
-        """
+        """A structurally valid model without holdout data receives the reward floor."""
         import json
 
         import numpy as np
@@ -686,8 +684,7 @@ def model(data):
     return m
 """
 
-# GENUINE violation: user-written data-dependent branch (pt.switch on a Data
-# condition) in the forward model graph. The kept branching check MUST reject it.
+# A user-written data-dependent branch in the forward model graph is refused.
 DATA_BRANCH_MODEL = """\
 import pymc as pm
 import numpy as np
@@ -739,7 +736,7 @@ def model(data):
 """
 
 
-class TestL3StrictProfileGraphFix:
+class TestL3StrictProfileGraph:
     @pytest.fixture()
     def reg_data(self):
         import numpy as np

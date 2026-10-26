@@ -1,15 +1,10 @@
-"""Real programs that the verifier refused for the wrong reason, with the outcome each must have.
+"""Verifier outcomes for unused containers and non-finite observed log probabilities.
 
-Two groups, all unchanged model answers on real task tables:
-
-- unread_container: layer 3 refused these for a `pm.Data` container. Where the container is a
-  statement that nothing reads, the program must now get the outcome that the cascade gave once
-  that statement was deleted. One program reads its containers into a predictor that the
-  likelihood never uses; it stays refused.
-- nonfinite_observed: layer 5 said "model ignores data" because the observed log-probability was
-  minus infinity on the full and on the halved data. These programs use their data; layer 6 must
-  report that sampling cannot start.
-
+- unread_container: an unread `pm.Data` statement leaves the cascade outcome unchanged.
+  A predictor that the likelihood never uses is refused.
+- nonfinite_observed: programs that use their data but have minus-infinite observed
+  log probabilities on both the full and halved data reach layer 6, which reports
+  that sampling cannot start.
 """
 
 import hashlib

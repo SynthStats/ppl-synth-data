@@ -40,7 +40,7 @@ def test_error_names_the_file_path(corrupted_journal: EpisodeJournal) -> None:
 
 
 def test_torn_tail_still_silently_skipped(tmp_path: Path) -> None:
-    """Regression: Fix does not make partial trailing lines into errors."""
+    """An incomplete trailing line leaves complete journal events readable."""
     journal = EpisodeJournal.for_episode(tmp_path, "ep-torn", fsync_mode=FsyncMode.never)
     _emit_complete_episode(journal, n_turns=1)
     # Partial trailing line (no newline); torn write; must be tolerated.
